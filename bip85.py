@@ -15,15 +15,19 @@ class Bip85:
         self.priv_key = None
         self.entropy = None
 
-    def import_menmonic(self, mnemonic):
-        # TODO: Check mnemonic
-        self.mnemonic = mnemonic
-        self.seed = bytearray(64)
-        self.password = ''
-        wally.bip39_mnemonic_to_seed(self.mnemonic, self.password, self.seed)
-        print('Original seed: {}'.format(self.seed.hex()))
-        self.master_key = wally.bip32_key_from_seed(self.seed, wally.BIP32_VER_MAIN_PRIVATE, wally.BIP32_FLAG_SKIP_HASH)
-        print('Original master key: {}'.format(wally.bip32_key_to_base58(self.master_key, 0)))
+    def import_mnemonic(self, mnemonic):
+        try:
+            wally.bip39_mnemonic_validate(None, mnemonic)
+            self.mnemonic = mnemonic
+            self.seed = bytearray(64)
+            self.password = ''
+            wally.bip39_mnemonic_to_seed(self.mnemonic, self.password, self.seed)
+            print('Original seed: {}'.format(self.seed.hex()))
+            self.master_key = wally.bip32_key_from_seed(self.seed, wally.BIP32_VER_MAIN_PRIVATE, wally.BIP32_FLAG_SKIP_HASH)
+            print('Original master key: {}'.format(wally.bip32_key_to_base58(self.master_key, 0)))
+        except:
+            self.seed = None
+            self.master_key = None
 
     def import_xprv(self, xprv):
         # TODO: Check
@@ -42,13 +46,15 @@ class Bip85:
 
     def derive_bip39(self, words, index):
         self.words = words
-        # TODO: check words
-        if self.word not in [12, 24]:
+        if self.words not in [12, 24]:
             print('Wrong words argument')
-        path = [self.HARDENED + 83696968, self.HARDENED + 39, self.HARDENED + 0, self.HARDENED + 12, self.HARDENED + index]
-        self.derive(self.xprv, path)
+            self.priv_key = None
+            self.entropy = None
+            return
+        path = [self.HARDENED + 83696968, self.HARDENED + 39, self.HARDENED + 0, self.HARDENED + words, self.HARDENED + index]
+        self.derive(path)
 
-    def get_mnemonic():
-        bytes = self.word/12*16
-        self.mnemonic = wally.bip39_mnemonic_from_bytes(None, self.entropy[:bytes])
-        print('Derived mnemonic: {}'.format(mnemonic))
+    def get_mnemonic(self):
+        bytes = round(self.words/12*16)
+        self.derived_mnemonic = wally.bip39_mnemonic_from_bytes(None, self.entropy[:bytes])
+        print('Derived mnemonic: {}'.format(self.derived_mnemonic))
