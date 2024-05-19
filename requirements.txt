@@ -1,3 +1,3 @@
-colorama==0.4.5
-termcolor==1.1.0
-wallycore==0.8.5
+colorama==0.4.6
+termcolor==2.4.0
+wallycore==1.2.0
